@@ -47,7 +47,7 @@ static struct platform_device *ovt_tcm_i2c_device;
 #ifdef CONFIG_OF
 static int parse_dt(struct device *dev, struct ovt_tcm_board_data *bdata)
 {
-	int retval;
+	int retval = -EIO;
 	u32 value;
 	struct property *prop;
 	struct device_node *np = dev->of_node;
@@ -231,7 +231,7 @@ static int ovt_tcm_i2c_alloc_mem(struct ovt_tcm_hcd *tcm_hcd,
 static int ovt_tcm_i2c_rmi_read(struct ovt_tcm_hcd *tcm_hcd,
 		unsigned short addr, unsigned char *data, unsigned int length)
 {
-	int retval;
+	int retval = -EIO;
 	unsigned char address;
 	unsigned int attempt;
 	struct i2c_msg msg[2];
@@ -278,7 +278,7 @@ exit:
 static int ovt_tcm_i2c_rmi_write(struct ovt_tcm_hcd *tcm_hcd,
 		unsigned short addr, unsigned char *data, unsigned int length)
 {
-	int retval;
+	int retval = -EIO;
 	unsigned int attempt;
 	unsigned int byte_count;
 	struct i2c_msg msg;
@@ -339,7 +339,7 @@ exit:
 static int ovt_tcm_i2c_read(struct ovt_tcm_hcd *tcm_hcd, unsigned char *data,
 		unsigned int length)
 {
-	int retval;
+	int retval = -EIO;
 	unsigned int attempt;
 	struct i2c_msg msg;
 	struct i2c_client *i2c = to_i2c_client(tcm_hcd->pdev->dev.parent);
@@ -377,7 +377,7 @@ exit:
 static int ovt_tcm_i2c_write(struct ovt_tcm_hcd *tcm_hcd, unsigned char *data,
 		unsigned int length)
 {
-	int retval;
+	int retval = -EIO;
 	unsigned int attempt;
 	struct i2c_msg msg;
 	struct i2c_client *i2c = to_i2c_client(tcm_hcd->pdev->dev.parent);
@@ -415,7 +415,7 @@ exit:
 static int ovt_tcm_i2c_probe(struct i2c_client *i2c,
 		const struct i2c_device_id *dev_id)
 {
-	int retval;
+	int retval = -EIO;
 
 	ovt_tcm_i2c_device = platform_device_alloc(PLATFORM_DRIVER_NAME, 0);
 	if (!ovt_tcm_i2c_device) {
