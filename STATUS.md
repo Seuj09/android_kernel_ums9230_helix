@@ -1,85 +1,76 @@
 # Helix — android_kernel_ums9230_helix
 
-**Current status: AOSP Clang 12 + Jeus helix_defconfig; LTO_NONE for CI (full LTO killed GHA runner).**
+**Current status: CI Image GREEN — AOSP Clang 12 + Jeus helix_defconfig (LTO_NONE).**
 
 Goal: clean Helix rebase base for ums9230 on realme Android U OEM 5.4.254.  
 **JUST BOOT** — first prove `boot_completed=1` on **A13 GSI** (gsi ≤ 13) with Image-only flash.
+
+## Green tip / CI
+
+| Field | Value |
+|-------|--------|
+| Tip SHA | `7e923f8b5f2766e80bc5b89409e7dd315bf9a047` |
+| CI run | https://github.com/Seuj09/android_kernel_ums9230_helix/actions/runs/35447926963 |
+| Artifact | `kernel-Image-7e923f8b5f2766e80bc5b89409e7dd315bf9a047` (Image.xz) |
+| Artifact zip digest (GHA) | `sha256:894f5be8ee221ab63f4710f4ad78e65fe062357fc7447786a5843641c1ad2871` |
+| Image.xz SHA256 | `b88dffaa38b28466cfd1bf810d575d439c4068e6e0fc55259146d9eee7d2e2c1` |
+| Image (decompressed) SHA256 | `dcd7cbb98b2c1101c29aee9c72a06817756df57b764db24ac01e9054daa4bf14` |
+| Image size | 27908608 bytes |
 
 ## OEM source (verified)
 
 | Field | Value |
 |-------|--------|
 | Repo | https://github.com/realme-kernel-opensource/realme_C51_C53_Note50_C60_C51_N53-AndroidU-kernel-source |
-| Default branch | `master` |
-| Tip SHA (`git rev-parse`) | `dc9bfd6f17e9555972307fcc605f6bd3db006a6a` |
-| Commit date | 2024-07-08 17:37:39 +0800 |
-| Subject | Upload realme_N53 AndroidU kernel source |
-| Kernel base | **5.4.254** Android U (realme C51 / C53 / Note50 / C60 / C51 / N53) |
+| Tip SHA | `dc9bfd6f17e9555972307fcc605f6bd3db006a6a` |
+| Kernel base | **5.4.254** Android U |
 
-## First Image contents (this tip)
+## First Image contents
 
 | Item | Choice | Notes |
 |------|--------|--------|
-| Defconfig | **OEM `sprd_qogirl6_defconfig`** | ums9230 = qogirl6 family; not old-tree `unisoc_defconfig` |
-| LOCALVERSION | `-Helix` | Trivial branding only |
-| CMDLINE | **OEM empty** `CONFIG_CMDLINE=""` | Stock-like — no quiet/mute/nowatchdog, no cgroup_disable/no_v1 |
-| DTS / dtbo | **OEM stock** (`ums9230-1h10-overlay` already in tree) | No port; Image-only artifact does not pack dtb |
-| Ports from old `android_kernel_ums9230` | **None** for first Image | Kitchen-sink unisoc_defconfig / UFFD / BPF / ReSukiSU / cgroup_no_v1 deferred |
+| Defconfig | **Jeus `helix_defconfig`** (from 5.4.210 device `.config`) + `olddefconfig` | Not old-tree `unisoc_defconfig`; not stock-only `sprd_qogirl6` for this prove |
+| LOCALVERSION | Jeus empty / AUTO | Branding optional; not required for first prove |
+| CMDLINE | **empty** `CONFIG_CMDLINE=""` | Stock-like — no quiet/mute/nowatchdog, no cgroup_disable/no_v1 |
+| LTO | **`CONFIG_LTO_NONE`** | Jeus had full `LTO_CLANG`; full LTO of `vmlinux.o` killed the GHA runner — disabled for first Image |
+| DTS / dtbo | OEM stock | Image-only artifact; keep OEM dtb/dtbo on device |
+| Ports from old tree | **None** for first Image | UFFD / BPF / ReSukiSU / cgroup_no_v1 deferred |
+| Compile fix | `omnivision_tcm_i2c.c` init `retval=-EIO` | Clang 12 `-Werror,-Wsometimes-uninitialized` |
 
 ## CI (Build Kernel)
-- Toolchain: **AOSP Clang 12** (`clang-r416183b`) + `CROSS_COMPILE=aarch64-linux-gnu-`
-- **No Proton**
-- Defconfig: `helix_defconfig` then `olddefconfig`, then `Image`
 
+- Toolchain: **AOSP Clang 12** (`clang-r416183b`) + GNU `aarch64-linux-gnu-` binutils
+- **No Proton** (do not reintroduce)
+- Build: `helix_defconfig` → `olddefconfig` → `Image`
 
-## Flash / prove (Jeus — after CI Image green)
+## Flash / prove (Jeus)
 
 ```bash
-# Flash Image only (replace path with downloaded artifact, decompress xz first)
-# Example with magiskboot / anyboot packing into existing boot.img — keep OEM dtb/dtbo.
+# Download artifact Image.xz, decompress:
+xz -dk Image.xz
+# Pack Image-only into existing boot.img (keep OEM dtb/dtbo), flash boot
 # Prove on A13 GSI:
 adb wait-for-device
 adb shell getprop sys.boot_completed
 # expect: 1
 ```
 
-**Flash = Image-only.** Do not require AK3 cgroup zip for first prove.
-
-## Old reference repo (untouched)
-
-- **Seuj09/android_kernel_ums9230** — do **not** delete or force-push.
-- Helix ports **from** that tree later if needed; this repo stays a clean OEM rebase base.
+**Flash = Image-only.** No AK3 cgroup zip for first prove.
 
 ## Deferred (after A13 boot_completed=1)
 
-- UFFD P0 only if a later GSI target requires it
-- BPF backports vs eun (never stub `net_namespace`)
-- ReSukiSU
-- cgroup: stock-like empty/minimal CMDLINE first; `cgroup_no_v1` + boot-nested AK3 only as A17 GSI follow-up
-- Kitchen-sink cmdline from old `unisoc_defconfig`
+- Re-enable ThinLTO / LTO_CLANG if desired
+- UFFD, BPF completeness, ReSukiSU, cgroup_no_v1, AK3 cgroup zip
+- A16/A17 GSI work
 
-## Constraints
+## Old reference repo (untouched)
 
-- Stock A13 cmdline baseline had **no** `cgroup_disable` / `cgroup_no_v1` — keep stock-like empty/minimal CMDLINE first.
-- No kitchen-sink quiet/mute/nowatchdog on day one.
-- **CI Image must be green before any flash ask.**
-- Old repo `Seuj09/android_kernel_ums9230` stays untouched.
+- **Seuj09/android_kernel_ums9230** — do not delete or force-push
 
 ## Checklist
 
-- [x] Public repo created: `Seuj09/android_kernel_ums9230_helix`
-- [x] OEM tree imported (shallow tip = verified SHA `dc9bfd6…`)
-- [x] `STATUS.md` added (JUST BOOT / A13 GSI first)
-- [x] Minimal ums9230 board/defconfig/LOCALVERSION for Image build (OEM qogirl6 + `-Helix`)
-- [ ] CI Image green
+- [x] Public repo + OEM import
+- [x] Jeus helix_defconfig + AOSP Clang 12 CI
+- [x] CI Image green
 - [ ] Image-only flash → `boot_completed=1` on A13 GSI
-- [ ] A16/A17 + feature ports only after A13 proof
-
-## Defconfig (first A13 Image)
-- Source: Jeus device `.config` (Linux/arm64 **5.4.210** auto-generated, 6464 lines)
-- In-tree: `arch/arm64/configs/helix_defconfig`
-- After `helix_defconfig`, CI runs `olddefconfig` so symbols settle on this **5.4.254** OEM tree
-- `CONFIG_CMDLINE=""` (stock-like); `CONFIG_LOCALVERSION=""` (as Jeus provided — no `-Helix` unless asked)
-- Already Clang 12.0.5 / LTO_CLANG / CFI; `CONFIG_ARCH_SPRD=y`, `USERFAULTFD=y`, `TRAN_HIBER_SUPPORT=y`
-- Replaces earlier `sprd_qogirl6_defconfig` CI target for first prove
-
+- [ ] Feature ports only after A13 proof
