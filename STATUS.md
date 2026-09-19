@@ -27,12 +27,9 @@ Goal: clean Helix rebase base for ums9230 on realme Android U OEM 5.4.254.
 | Ports from old `android_kernel_ums9230` | **None** for first Image | Kitchen-sink unisoc_defconfig / UFFD / BPF / ReSukiSU / cgroup_no_v1 deferred |
 
 ## CI (Build Kernel)
-- Toolchain: **AOSP Clang 12** (`clang-r416183b`, Android 12L prebuilt) + `CROSS_COMPILE=aarch64-linux-gnu-` for GAS/ld.
-- **No Proton** (maxsteeel/proton-12 removed).
-- Plain GCC-only will not work: `sprd_qogirl6_defconfig` has `CONFIG_CC_IS_CLANG=y`, `LTO_CLANG`, `CFI_CLANG`.
-- Build:
-  `make ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 O=out sprd_qogirl6_defconfig`
-  then `Image`.
+- Toolchain: **AOSP Clang 12** (`clang-r416183b`) + `CROSS_COMPILE=aarch64-linux-gnu-`
+- **No Proton**
+- Defconfig: `helix_defconfig` then `olddefconfig`, then `Image`
 
 
 ## Flash / prove (Jeus — after CI Image green)
@@ -77,3 +74,12 @@ adb shell getprop sys.boot_completed
 - [ ] CI Image green
 - [ ] Image-only flash → `boot_completed=1` on A13 GSI
 - [ ] A16/A17 + feature ports only after A13 proof
+
+## Defconfig (first A13 Image)
+- Source: Jeus device `.config` (Linux/arm64 **5.4.210** auto-generated, 6464 lines)
+- In-tree: `arch/arm64/configs/helix_defconfig`
+- After `helix_defconfig`, CI runs `olddefconfig` so symbols settle on this **5.4.254** OEM tree
+- `CONFIG_CMDLINE=""` (stock-like); `CONFIG_LOCALVERSION=""` (as Jeus provided — no `-Helix` unless asked)
+- Already Clang 12.0.5 / LTO_CLANG / CFI; `CONFIG_ARCH_SPRD=y`, `USERFAULTFD=y`, `TRAN_HIBER_SUPPORT=y`
+- Replaces earlier `sprd_qogirl6_defconfig` CI target for first prove
+
