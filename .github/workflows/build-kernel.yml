@@ -15,16 +15,14 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y flex bison bc cpio libssl-dev xz-utils dwarves
+          sudo apt-get install -y \
+            gcc-aarch64-linux-gnu \
+            flex bison bc cpio libssl-dev xz-utils dwarves
 
-      - name: Fetch Proton Clang 12
+      - name: Build Image (OEM GNU toolchain)
         run: |
-          git clone --depth 1 https://github.com/maxsteeel/proton-12 toolchain
-
-      - name: Build Image
-        run: |
-          make ARCH=arm64 O=out sprd_qogirl6_defconfig
-          make ARCH=arm64 O=out -j$(nproc) Image
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out sprd_qogirl6_defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out -j$(nproc) Image
 
       - name: Compress Image with xz -9e
         run: |

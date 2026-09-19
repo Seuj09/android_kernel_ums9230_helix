@@ -26,12 +26,12 @@ Goal: clean Helix rebase base for ums9230 on realme Android U OEM 5.4.254.
 | DTS / dtbo | **OEM stock** (`ums9230-1h10-overlay` already in tree) | No port; Image-only artifact does not pack dtb |
 | Ports from old `android_kernel_ums9230` | **None** for first Image | Kitchen-sink unisoc_defconfig / UFFD / BPF / ReSukiSU / cgroup_no_v1 deferred |
 
-## CI
+## CI (Build Kernel)
+- Toolchain: **GNU** `gcc-aarch64-linux-gnu` / `CROSS_COMPILE=aarch64-linux-gnu-` (OEM-style).
+- **No Proton Clang** (removed; do not reintroduce for first A13 Image).
+- If LTO later needs Clang: use AOSP clang prebuilt — not Proton.
+- Build: `make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out sprd_qogirl6_defconfig` then `Image`.
 
-- Workflow: `.github/workflows/build-kernel.yml` (Image-only artifact `kernel-Image-<sha>.xz`)
-- Defconfig target: `sprd_qogirl6_defconfig`
-- Toolchain: Proton Clang 12 (`maxsteeel/proton-12`) fetched in CI
-- CI URL: see Actions after push to `master` (update this section when green)
 
 ## Flash / prove (Jeus — after CI Image green)
 
