@@ -1,6 +1,6 @@
 # Helix — android_kernel_ums9230_helix
 
-**Current status: AOSP Clang 12 CI on Jeus helix_defconfig — fixing OEM Werror (omnivision_tcm_i2c).**
+**Current status: AOSP Clang 12 + Jeus helix_defconfig; LTO_NONE for CI (full LTO killed GHA runner).**
 
 Goal: clean Helix rebase base for ums9230 on realme Android U OEM 5.4.254.  
 **JUST BOOT** — first prove `boot_completed=1` on **A13 GSI** (gsi ≤ 13) with Image-only flash.
