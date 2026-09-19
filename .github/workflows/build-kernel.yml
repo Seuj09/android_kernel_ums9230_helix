@@ -17,12 +17,35 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             gcc-aarch64-linux-gnu \
-            flex bison bc cpio libssl-dev xz-utils dwarves
+            flex bison bc cpio libssl-dev xz-utils dwarves wget
 
-      - name: Build Image (OEM GNU toolchain)
+      - name: Fetch AOSP Clang 12 (clang-r416183b)
         run: |
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out sprd_qogirl6_defconfig
-          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=out -j$(nproc) Image
+          # Matches sprd_qogirl6_defconfig CONFIG_CLANG_VERSION=120005 / LTO_CLANG
+          # Not Proton. Archive extracts clang tree (bin/clang, etc.) into ./clang/
+          mkdir -p clang
+          wget -q -O clang-r416183b.tar.gz \
+            'https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android12L-release/clang-r416183b.tar.gz'
+          tar -xzf clang-r416183b.tar.gz -C clang
+          rm -f clang-r416183b.tar.gz
+          test -x clang/bin/clang
+          clang/bin/clang --version | head -3
+
+      - name: Build Image (AOSP Clang 12 + GNU binutils)
+        run: |
+          export PATH="$PWD/clang/bin:$PATH"
+          make ARCH=arm64 \
+            CC=clang \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            LLVM=1 LLVM_IAS=1 \
+            O=out sprd_qogirl6_defconfig
+          make ARCH=arm64 \
+            CC=clang \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            LLVM=1 LLVM_IAS=1 \
+            O=out -j"$(nproc)" Image
 
       - name: Compress Image with xz -9e
         run: |
