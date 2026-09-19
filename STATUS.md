@@ -1,6 +1,6 @@
 # Helix — android_kernel_ums9230_helix
 
-**Current status: skeleton only — OEM import done; ports not started.**
+**Current status: first Image CI attempted — OEM stock qogirl6 + LOCALVERSION=-Helix.**
 
 Goal: clean Helix rebase base for ums9230 on realme Android U OEM 5.4.254.  
 **JUST BOOT** — first prove `boot_completed=1` on **A13 GSI** (gsi ≤ 13) with Image-only flash.
@@ -16,34 +16,40 @@ Goal: clean Helix rebase base for ums9230 on realme Android U OEM 5.4.254.
 | Subject | Upload realme_N53 AndroidU kernel source |
 | Kernel base | **5.4.254** Android U (realme C51 / C53 / Note50 / C60 / C51 / N53) |
 
-Verified locally after shallow clone: `git rev-parse HEAD` of the import commit == OEM tip above.
+## First Image contents (this tip)
 
-## Import approach
+| Item | Choice | Notes |
+|------|--------|--------|
+| Defconfig | **OEM `sprd_qogirl6_defconfig`** | ums9230 = qogirl6 family; not old-tree `unisoc_defconfig` |
+| LOCALVERSION | `-Helix` | Trivial branding only |
+| CMDLINE | **OEM empty** `CONFIG_CMDLINE=""` | Stock-like — no quiet/mute/nowatchdog, no cgroup_disable/no_v1 |
+| DTS / dtbo | **OEM stock** (`ums9230-1h10-overlay` already in tree) | No port; Image-only artifact does not pack dtb |
+| Ports from old `android_kernel_ums9230` | **None** for first Image | Kitchen-sink unisoc_defconfig / UFFD / BPF / ReSukiSU / cgroup_no_v1 deferred |
 
-- **Shallow clone** of OEM `master` (`--depth 1`) then push that tip as Helix `master`.
-- **OEM tip commit SHA preserved** as the parent of the STATUS commit (`dc9bfd6…`).
-- History beyond the tip was **intentionally flattened** (disk-tight workspace at import; full OEM history not fetched).
-- Remote `oem` retained pointing at the upstream OEM URL for reference.
+## CI
+
+- Workflow: `.github/workflows/build-kernel.yml` (Image-only artifact `kernel-Image-<sha>.xz`)
+- Defconfig target: `sprd_qogirl6_defconfig`
+- Toolchain: Proton Clang 12 (`maxsteeel/proton-12`) fetched in CI
+- CI URL: see Actions after push to `master` (update this section when green)
+
+## Flash / prove (Jeus — after CI Image green)
+
+```bash
+# Flash Image only (replace path with downloaded artifact, decompress xz first)
+# Example with magiskboot / anyboot packing into existing boot.img — keep OEM dtb/dtbo.
+# Prove on A13 GSI:
+adb wait-for-device
+adb shell getprop sys.boot_completed
+# expect: 1
+```
+
+**Flash = Image-only.** Do not require AK3 cgroup zip for first prove.
 
 ## Old reference repo (untouched)
 
 - **Seuj09/android_kernel_ums9230** — do **not** delete or force-push.
 - Helix ports **from** that tree later if needed; this repo stays a clean OEM rebase base.
-
-## First Image target (A13 GSI)
-
-**First Image = OEM C53 Android U import + minimal ums9230 board/defconfig only.**
-
-| Step | Action |
-|------|--------|
-| 1 | Minimal defconfig / DTS / `LOCALVERSION=-Helix` for ums9230_1h10 / Jeus so CI builds Image |
-| 2 | **CI Image green** |
-| 3 | **Image-only flash** |
-| 4 | Prove **`boot_completed=1` on A13 GSI** (gsi ≤ 13) |
-
-**Do NOT port for first prove:** UFFD, BPF completeness, ReSukiSU, `cgroup_no_v1`, AK3 cgroup zip, or any other Helix extras.
-
-A16 / A17 GSI work is **later**, after A13 boot proof.
 
 ## Deferred (after A13 boot_completed=1)
 
@@ -51,6 +57,7 @@ A16 / A17 GSI work is **later**, after A13 boot proof.
 - BPF backports vs eun (never stub `net_namespace`)
 - ReSukiSU
 - cgroup: stock-like empty/minimal CMDLINE first; `cgroup_no_v1` + boot-nested AK3 only as A17 GSI follow-up
+- Kitchen-sink cmdline from old `unisoc_defconfig`
 
 ## Constraints
 
@@ -64,7 +71,7 @@ A16 / A17 GSI work is **later**, after A13 boot proof.
 - [x] Public repo created: `Seuj09/android_kernel_ums9230_helix`
 - [x] OEM tree imported (shallow tip = verified SHA `dc9bfd6…`)
 - [x] `STATUS.md` added (JUST BOOT / A13 GSI first)
-- [ ] Minimal ums9230 board/defconfig/LOCALVERSION for Image build
+- [x] Minimal ums9230 board/defconfig/LOCALVERSION for Image build (OEM qogirl6 + `-Helix`)
 - [ ] CI Image green
 - [ ] Image-only flash → `boot_completed=1` on A13 GSI
 - [ ] A16/A17 + feature ports only after A13 proof
