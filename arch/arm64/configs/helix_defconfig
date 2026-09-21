@@ -6476,3 +6476,9 @@ CONFIG_CORESIGHT_STM=y
 # CONFIG_SPRD_SHARKL6PRO_CORESIGHT_PHY is not set
 # end of Coresight Physical Layer drivers
 # end of Kernel hacking
+
+#
+# ODM
+#
+# Huaqin hardware_info — required for Omnivision TCM=y (get_hardware_info_data)
+CONFIG_HQ_HARDWARE_INFO=y
