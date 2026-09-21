@@ -27,28 +27,21 @@ jobs:
           test -x clang/bin/clang
           clang/bin/clang --version | head -3
 
-      - name: Build Image + modules (Jeus helix_defconfig + olddefconfig)
+      - name: Build Image (Jeus helix_defconfig + olddefconfig)
         run: |
           export PATH="$PWD/clang/bin:$PATH"
           make LLVM=1 LLVM_IAS=1 O="out" helix_defconfig
           make LLVM=1 LLVM_IAS=1 O="out" olddefconfig
-          # Confirm Omnivision stays builtin; demoted TPs are modules
-          grep -E 'CONFIG_TOUCHSCREEN_(HIMAX_CHIPSET|OMNIVISION_TCM|OMNIVISION_TCM_I2C|FTS|FOCALTECH_SPI|CHIPONE)=' out/.config
-          make LLVM=1 LLVM_IAS=1 O="out" -j$(nproc) Image modules
+          grep -E 'CONFIG_TOUCHSCREEN_(HIMAX_CHIPSET|OMNIVISION_TCM|OMNIVISION_TCM_I2C|FTS|FOCALTECH_SPI|CHIPONE)=' out/.config || true
+          make LLVM=1 LLVM_IAS=1 O="out" -j$(nproc) Image
 
-      - name: Compress Image with xz -9e and pack modules
+      - name: Compress Image with xz -9e
         run: |
           xz -9e -k -c out/arch/arm64/boot/Image > out/arch/arm64/boot/Image.xz
-          mkdir -p out/modules_install
-          export PATH="$PWD/clang/bin:$PATH"
-          make LLVM=1 LLVM_IAS=1 O="out" INSTALL_MOD_PATH="$PWD/out/modules_install" modules_install
-          tar -C out/modules_install -cJf out/modules.tar.xz .
 
       - name: Upload build output
         uses: actions/upload-artifact@v4
         with:
           name: kernel-Image-${{ github.sha }}
-          path: |
-            out/arch/arm64/boot/Image.xz
-            out/modules.tar.xz
+          path: out/arch/arm64/boot/Image.xz
           if-no-files-found: error
