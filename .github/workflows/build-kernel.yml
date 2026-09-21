@@ -5,36 +5,12 @@ on:
   push:
     branches: [ master ]
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Demote non-Omnivision TPs to =m (keep TCM+I2C =y)
-        run: |
-          set -eux
-          f=arch/arm64/configs/helix_defconfig
-          sed -i \
-            -e 's/^CONFIG_TOUCHSCREEN_HIMAX_CHIPSET=y$/CONFIG_TOUCHSCREEN_HIMAX_CHIPSET=m/' \
-            -e 's/^CONFIG_TOUCHSCREEN_FTS=y$/CONFIG_TOUCHSCREEN_FTS=m/' \
-            -e 's/^CONFIG_TOUCHSCREEN_FOCALTECH_SPI=y$/CONFIG_TOUCHSCREEN_FOCALTECH_SPI=m/' \
-            -e 's/^CONFIG_TOUCHSCREEN_CHIPONE=y$/CONFIG_TOUCHSCREEN_CHIPONE=m/' \
-            "$f"
-          grep -E 'CONFIG_TOUCHSCREEN_(HIMAX_CHIPSET|OMNIVISION_TCM|OMNIVISION_TCM_I2C|FTS|FOCALTECH_SPI|CHIPONE)=' "$f"
-          if ! git diff --quiet -- "$f"; then
-            git config user.name Seuj09
-            git config user.email '138261033+Seuj09@users.noreply.github.com'
-            git add "$f"
-            git commit -m 'helix: demote non-Omnivision TPs to =m (keep TCM+I2C =y)'
-            git push origin HEAD:master || true
-          fi
 
       - name: Install build dependencies
         run: |
@@ -56,6 +32,8 @@ jobs:
           export PATH="$PWD/clang/bin:$PATH"
           make LLVM=1 LLVM_IAS=1 O="out" helix_defconfig
           make LLVM=1 LLVM_IAS=1 O="out" olddefconfig
+          # Confirm Omnivision stays builtin; demoted TPs are modules
+          grep -E 'CONFIG_TOUCHSCREEN_(HIMAX_CHIPSET|OMNIVISION_TCM|OMNIVISION_TCM_I2C|FTS|FOCALTECH_SPI|CHIPONE)=' out/.config
           make LLVM=1 LLVM_IAS=1 O="out" -j$(nproc) Image modules
 
       - name: Compress Image with xz -9e and pack modules
