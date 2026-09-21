@@ -74,3 +74,6 @@ adb shell getprop sys.boot_completed
 - [x] CI Image green
 - [ ] Image-only flash → `boot_completed=1` on A13 GSI
 - [ ] Feature ports only after A13 proof
+
+## Modules
+- `# CONFIG_MODULE_SIG is not set` (unlocked GSI — unsigned modules); `CONFIG_MODULES=y` kept
