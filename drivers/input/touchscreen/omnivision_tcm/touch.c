@@ -19,6 +19,18 @@
 
 #include "touch.h"
 
+#include <linux/hardware_info.h>
+
+/*
+ * Builtin (=y) Image link needs get_hardware_info_data. OEM usually provides
+ * it via CONFIG_HQ_HARDWARE_INFO (drivers/misc/hqhardwareinfo). That driver is
+ * large and not enabled in helix_defconfig; supply a weak no-op so vmlinux
+ * links. A strong definition from HQ_HARDWARE_INFO=y overrides this.
+ */
+void __weak get_hardware_info_data(enum hardware_id id, const void *data)
+{
+}
+
 struct touch_panel tp_interface;
 EXPORT_SYMBOL(tp_interface);
 

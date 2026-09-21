@@ -36,5 +36,5 @@ obj-$(CONFIG_TOUCHSCREEN_OMNIVISION_TCM_DIAGNOSTICS) += omnivision_tcm_diagnosti
 obj-$(CONFIG_TOUCHSCREEN_OMNIVISION_TCM_ZEROFLASH) += omnivision_tcm_zeroflash.o
 
 obj-$(CONFIG_TOUCHSCREEN_OMNIVISION_TCM_I2C) += omnivision_tcm_i2c.o
-omnivision_tcm_core_module-objs := omnivision_tcm_core.o omnivision_tcm_touch.o
+omnivision_tcm_core_module-objs := omnivision_tcm_core.o omnivision_tcm_touch.o touch.o
 endif
