@@ -15,7 +15,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y flex bison bc cpio libssl-dev xz-utils dwarves wget
+          sudo apt-get install -y gcc-aarch64-linux-gnu flex bison bc cpio libssl-dev xz-utils dwarves wget
 
       - name: Fetch AOSP Clang 12 (clang-r416183b)
         run: |
