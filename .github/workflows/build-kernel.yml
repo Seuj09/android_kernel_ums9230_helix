@@ -32,11 +32,7 @@ jobs:
             git config user.name Seuj09
             git config user.email '138261033+Seuj09@users.noreply.github.com'
             git add "$f"
-            git commit -m "helix: demote non-Omnivision TPs to =m (keep TCM+I2C =y)
-
-LTO link collided on FTS vs Focaltech SPI duplicates when both =y.
-Omnivision stays builtin; himax/fts/focaltech_spi/chipone become modules
-(paired with modules.tar.xz CI upload)."
+            git commit -m 'helix: demote non-Omnivision TPs to =m (keep TCM+I2C =y)'
             git push origin HEAD:master || true
           fi
 
