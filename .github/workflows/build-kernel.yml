@@ -15,9 +15,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            gcc-aarch64-linux-gnu \
-            flex bison bc cpio libssl-dev xz-utils dwarves wget
+          sudo apt-get install -y flex bison bc cpio libssl-dev xz-utils dwarves wget
 
       - name: Fetch AOSP Clang 12 (clang-r416183b)
         run: |
@@ -32,25 +30,9 @@ jobs:
       - name: Build Image (Jeus helix_defconfig + olddefconfig)
         run: |
           export PATH="$PWD/clang/bin:$PATH"
-          # Jeus full .config from 5.4.210 device — settle new symbols on this 5.4.254 tree
-          make ARCH=arm64 \
-            CC=clang \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            LLVM=1 LLVM_IAS=1 \
-            O=out helix_defconfig
-          make ARCH=arm64 \
-            CC=clang \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            LLVM=1 LLVM_IAS=1 \
-            O=out olddefconfig
-          make ARCH=arm64 \
-            CC=clang \
-            CLANG_TRIPLE=aarch64-linux-gnu- \
-            CROSS_COMPILE=aarch64-linux-gnu- \
-            LLVM=1 LLVM_IAS=1 \
-            O=out -j"$(nproc)" Image
+          make LLVM=1 LLVM_IAS=1 O="out" helix_defconfig
+          make LLVM=1 LLVM_IAS=1 O="out" olddefconfig
+          make LLVM=1 LLVM_IAS=1 O="out" -j$(nproc) Image
 
       - name: Compress Image with xz -9e
         run: |
