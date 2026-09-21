@@ -5,12 +5,40 @@ on:
   push:
     branches: [ master ]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Demote non-Omnivision TPs to =m (keep TCM+I2C =y)
+        run: |
+          set -eux
+          f=arch/arm64/configs/helix_defconfig
+          sed -i \
+            -e 's/^CONFIG_TOUCHSCREEN_HIMAX_CHIPSET=y$/CONFIG_TOUCHSCREEN_HIMAX_CHIPSET=m/' \
+            -e 's/^CONFIG_TOUCHSCREEN_FTS=y$/CONFIG_TOUCHSCREEN_FTS=m/' \
+            -e 's/^CONFIG_TOUCHSCREEN_FOCALTECH_SPI=y$/CONFIG_TOUCHSCREEN_FOCALTECH_SPI=m/' \
+            -e 's/^CONFIG_TOUCHSCREEN_CHIPONE=y$/CONFIG_TOUCHSCREEN_CHIPONE=m/' \
+            "$f"
+          grep -E 'CONFIG_TOUCHSCREEN_(HIMAX_CHIPSET|OMNIVISION_TCM|OMNIVISION_TCM_I2C|FTS|FOCALTECH_SPI|CHIPONE)=' "$f"
+          if ! git diff --quiet -- "$f"; then
+            git config user.name Seuj09
+            git config user.email '138261033+Seuj09@users.noreply.github.com'
+            git add "$f"
+            git commit -m "helix: demote non-Omnivision TPs to =m (keep TCM+I2C =y)
+
+LTO link collided on FTS vs Focaltech SPI duplicates when both =y.
+Omnivision stays builtin; himax/fts/focaltech_spi/chipone become modules
+(paired with modules.tar.xz CI upload)."
+            git push origin HEAD:master || true
+          fi
 
       - name: Install build dependencies
         run: |
